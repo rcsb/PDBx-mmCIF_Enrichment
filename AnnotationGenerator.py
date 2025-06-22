@@ -58,7 +58,7 @@ def get_existing_cif_files():
     return cif_files
 
 def find_protein_ligand_interactions(cif_file):
-    """Find protein-ligand interactions in a structure"""
+    """Find protein-ligand interactions in a structure (only processes first model)"""
     try:
         structure = gemmi.read_structure(cif_file)
     except Exception as e:
@@ -93,22 +93,24 @@ def find_protein_ligand_interactions(cif_file):
     
     start_time = time.time()
 
-    # Extract ligands and protein residues
+    # Extract ligands and protein residues (ONLY FROM FIRST MODEL)
     ligands = []
     protein_residues = []
 
-    for model in structure:
-        for chain in model:
-            for residue in chain:
-                try:
-                    if residue.entity_type == gemmi.EntityType.NonPolymer:
-                        ligands.append((chain.name, residue))
-                    elif is_protein_residue(residue):
-                        protein_residues.append((chain.name, residue))
-                except Exception as e:
-                    print(f"Error processing residue {residue}: {e}")
-                    continue
+    # Only process the first model (model[0])
+    model = structure[0]
+    for chain in model:
+        for residue in chain:
+            try:
+                if residue.entity_type == gemmi.EntityType.NonPolymer:
+                    ligands.append((chain.name, residue))
+                elif is_protein_residue(residue):
+                    protein_residues.append((chain.name, residue))
+            except Exception as e:
+                print(f"Error processing residue {residue}: {e}")
+                continue
 
+    # Rest of the function remains the same...
     # Build KDTree with centroids
     protein_data = []
     valid_protein_indices = []
